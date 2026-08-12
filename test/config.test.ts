@@ -65,5 +65,9 @@ describe("config", () => {
   it("builds ws url and attaches token", () => {
     expect(buildWsUrl("http://h:8080")).toBe("ws://h:8080/api");
     expect(buildWsUrl("https://h:8080/", "tok")).toBe("wss://h:8080/api?token=tok");
+    expect(buildWsUrl("http://h:8080/zigbee2mqtt")).toBe("ws://h:8080/zigbee2mqtt/api");
+    expect(buildWsUrl("https://h:8080/z2m/", "tok")).toBe(
+      "wss://h:8080/z2m/api?token=tok",
+    );
   });
 });

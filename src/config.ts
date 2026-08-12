@@ -174,12 +174,11 @@ export function resolveConfig(options: ResolveConfigOptions = {}): ResolvedConfi
 }
 
 /** Build ws:// or wss:// URL for the Z2M frontend API path. */
-export function buildWsUrl(baseUrl: string, authToken?: string, basePath = "/"): string {
+export function buildWsUrl(baseUrl: string, authToken?: string): string {
   const u = new URL(baseUrl);
   u.protocol = u.protocol === "https:" ? "wss:" : "ws:";
-  const pathBase = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
-  const apiPath = `${pathBase}/api`.replace(/\/{2,}/g, "/");
-  u.pathname = apiPath.startsWith("/") ? apiPath : `/${apiPath}`;
+  const pathBase = u.pathname.replace(/\/+$/, "");
+  u.pathname = `${pathBase}/api`.replace(/\/{2,}/g, "/") || "/api";
   u.search = "";
   u.hash = "";
   if (authToken) {

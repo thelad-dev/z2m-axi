@@ -66,6 +66,32 @@ describe("cli integration", () => {
     }
   });
 
+  it("bridge info rejects extra positionals", async () => {
+    const { stdout, exitCode } = await runCli(["bridge", "info", "foo"], {
+      homeDir: tempHome(),
+      env: { Z2M_URL: "http://127.0.0.1:1" },
+    });
+    expect(exitCode).toBe(2);
+    expect(stdout).toContain("unexpected argument");
+    expect(stdout).toContain("foo");
+  });
+
+  it("device list waits for delayed retained devices", async () => {
+    const mock = await startMockZ2m({ devicesDelayMs: 120 });
+    try {
+      const { stdout, exitCode } = await runCli(["device", "list"], {
+        homeDir: tempHome(),
+        env: { Z2M_URL: mock.baseUrl, Z2M_TIMEOUT_MS: "2000" },
+        clientOptions: { settleMs: 20 },
+      });
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain("kitchen_plug");
+      expect(stdout).not.toContain("0 devices found");
+    } finally {
+      await mock.close();
+    }
+  });
+
   it("blocks permit-join without confirmation", async () => {
     const mock = await startMockZ2m();
     try {

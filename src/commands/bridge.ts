@@ -23,6 +23,12 @@ export async function bridgeCommand(
   const positionals = takePositional(args);
   const sub = positionals[0] ?? "info";
   if (sub === "info") {
+    if (positionals.length > 1) {
+      throw new AxiError(`unexpected argument: ${positionals[1]}`, "VALIDATION_ERROR", [
+        "usage: z2m-axi bridge info",
+        "Run `z2m-axi bridge --help`",
+      ]);
+    }
     assertNoUnknownFlags(args, ["--url", "--token", "--timeout", "--config"]);
     return bridgeInfo(ctx);
   }

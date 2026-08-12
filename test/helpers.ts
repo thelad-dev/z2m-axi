@@ -82,6 +82,8 @@ export interface MockZ2mOptions {
   info?: Z2mBridgeInfo;
   devices?: Z2mDevice[];
   authToken?: string;
+  /** Delay before pushing bridge/devices after connect (ms). */
+  devicesDelayMs?: number;
   /** Custom request handler; return response data or throw. */
   onRequest?: (
     path: string,
@@ -134,7 +136,16 @@ export async function startMockZ2m(options: MockZ2mOptions = {}): Promise<MockZ2
   wss.on("connection", (ws: WebSocket) => {
     ws.send(JSON.stringify({ topic: "bridge/state", payload: { state: "online" } }));
     ws.send(JSON.stringify({ topic: "bridge/info", payload: info }));
-    ws.send(JSON.stringify({ topic: "bridge/devices", payload: devices }));
+    const pushDevices = () => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({ topic: "bridge/devices", payload: devices }));
+      }
+    };
+    if (options.devicesDelayMs && options.devicesDelayMs > 0) {
+      setTimeout(pushDevices, options.devicesDelayMs);
+    } else {
+      pushDevices();
+    }
 
     ws.on("message", async (data) => {
       let msg: { topic?: string; payload?: unknown };

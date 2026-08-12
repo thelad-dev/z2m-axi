@@ -227,17 +227,29 @@ export class Z2mClient {
 
   async ensureSnapshot(): Promise<Snapshot> {
     await this.connect();
-    const snap = this.getSnapshot();
-    if (!snap.info && !snap.devices) {
-      // One more short wait in case settle was early.
-      await sleep(this.settleMs);
+    if (this.hasCriticalRetained()) {
+      return this.getSnapshot();
+    }
+
+    const deadline = Date.now() + this.config.timeoutMs;
+    while (Date.now() < deadline) {
+      if (this.hasCriticalRetained()) {
+        return this.getSnapshot();
+      }
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      await sleep(Math.min(this.settleMs, remaining));
     }
     return this.getSnapshot();
   }
 
+  private hasCriticalRetained(): boolean {
+    return this.retained.has("bridge/info") && this.retained.has("bridge/devices");
+  }
+
   async request(
     topic: string,
-    payload: Record<string, unknown> | string = {},
+    payload: Record<string, unknown> = {},
   ): Promise<Z2mResponsePayload> {
     await this.connect();
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
@@ -249,15 +261,8 @@ export class Z2mClient {
     }
 
     const transaction = `${this.txnPrefix}-${this.txnCounter++}`;
-    const body =
-      typeof payload === "string"
-        ? payload
-        : { ...payload, transaction };
-
-    const message =
-      typeof body === "string"
-        ? JSON.stringify({ topic, payload: body })
-        : JSON.stringify({ topic, payload: body });
+    const body = { ...payload, transaction };
+    const message = JSON.stringify({ topic, payload: body });
 
     return new Promise<Z2mResponsePayload>((resolve, reject) => {
       const timer = setTimeout(() => {
