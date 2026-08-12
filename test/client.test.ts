@@ -42,6 +42,24 @@ describe("Z2mClient", () => {
     }
   });
 
+  it("fails when bridge/devices never arrives", async () => {
+    const mock = await startMockZ2m({ pushDevices: false });
+    try {
+      const config = resolveConfig({
+        homeDir: tempHome(),
+        env: { Z2M_URL: mock.baseUrl, Z2M_TIMEOUT_MS: "200" },
+      });
+      const client = new Z2mClient({ config, settleMs: 20 });
+      await expect(client.ensureSnapshot()).rejects.toMatchObject({
+        code: "CONNECT_ERROR",
+        message: expect.stringContaining("bridge/devices"),
+      });
+      client.close();
+    } finally {
+      await mock.close();
+    }
+  });
+
   it("embeds transaction so bridge responses resolve", async () => {
     let seenTxn: string | undefined;
     const mock = await startMockZ2m({

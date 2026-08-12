@@ -3,6 +3,7 @@ import {
   assertNoUnknownFlags,
   parseNonNegativeIntegerFlag,
   takeBoolFlag,
+  takeFirstPositional,
   takeFlag,
   takePositional,
 } from "../args.js";
@@ -42,15 +43,25 @@ examples:
   z2m-axi device interview my_plug --confirm my_plug
 `;
 
+const DEVICE_VALUE_FLAGS = [
+  "--type",
+  "--search",
+  "--limit",
+  "--fields",
+  "--confirm",
+  "--url",
+  "--token",
+  "--timeout",
+  "--config",
+];
+
 export async function deviceCommand(
   args: string[],
   ctx: CliContext,
 ): Promise<Output> {
+  // Strip only the first true positional subcommand; keep flags on either side.
   const working = [...args];
-  // Pull flags we understand at the top so positionals are clean for routing,
-  // but each subcommand re-parses from a copy of original for its own set.
-  const positionals = takePositional(working);
-  const sub = positionals[0];
+  const sub = takeFirstPositional(working, DEVICE_VALUE_FLAGS);
   if (!sub) {
     throw new AxiError("device subcommand required", "VALIDATION_ERROR", [
       "valid subcommands: list, show, interview",
@@ -58,11 +69,9 @@ export async function deviceCommand(
     ]);
   }
 
-  if (sub === "list") return deviceList(args.slice(args.indexOf("list") + 1), ctx);
-  if (sub === "show") return deviceShow(args.slice(args.indexOf("show") + 1), ctx);
-  if (sub === "interview") {
-    return deviceInterview(args.slice(args.indexOf("interview") + 1), ctx);
-  }
+  if (sub === "list") return deviceList(working, ctx);
+  if (sub === "show") return deviceShow(working, ctx);
+  if (sub === "interview") return deviceInterview(working, ctx);
 
   throw new AxiError(`unknown device subcommand: ${sub}`, "VALIDATION_ERROR", [
     "valid subcommands: list, show, interview",

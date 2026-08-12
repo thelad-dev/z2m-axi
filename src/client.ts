@@ -236,15 +236,36 @@ export class Z2mClient {
       if (this.hasCriticalRetained()) {
         return this.getSnapshot();
       }
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        throw this.missingCriticalRetainedError("connection closed while waiting for");
+      }
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
       await sleep(Math.min(this.settleMs, remaining));
+    }
+    if (!this.hasCriticalRetained()) {
+      throw this.missingCriticalRetainedError("timed out waiting for");
     }
     return this.getSnapshot();
   }
 
   private hasCriticalRetained(): boolean {
     return this.retained.has("bridge/info") && this.retained.has("bridge/devices");
+  }
+
+  private missingCriticalRetainedError(prefix: string): AxiError {
+    const missing: string[] = [];
+    if (!this.retained.has("bridge/info")) missing.push("bridge/info");
+    if (!this.retained.has("bridge/devices")) missing.push("bridge/devices");
+    return new AxiError(
+      `${prefix} retained topics: ${missing.join(", ")}`,
+      "CONNECT_ERROR",
+      [
+        "Confirm the URL points at the Zigbee2MQTT frontend WebSocket (/api)",
+        "Check that the bridge is running and publishing retained bridge topics",
+        "Run `z2m-axi config show` to inspect connection settings (token masked)",
+      ],
+    );
   }
 
   async request(

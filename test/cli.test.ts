@@ -92,6 +92,55 @@ describe("cli integration", () => {
     }
   });
 
+  it("device list errors when retained devices topic is missing", async () => {
+    const mock = await startMockZ2m({ pushDevices: false });
+    try {
+      const { stdout, exitCode } = await runCli(["device", "list"], {
+        homeDir: tempHome(),
+        env: { Z2M_URL: mock.baseUrl, Z2M_TIMEOUT_MS: "200" },
+        clientOptions: { settleMs: 20 },
+      });
+      expect(exitCode).not.toBe(0);
+      expect(stdout).toContain("bridge/devices");
+      expect(stdout).toContain("CONNECT_ERROR");
+      expect(stdout).not.toContain("0 devices found");
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it("device list keeps flags placed before the subcommand", async () => {
+    const mock = await startMockZ2m();
+    try {
+      const home = tempHome();
+      const env = { Z2M_URL: mock.baseUrl };
+      const filtered = await runCli(["device", "--type", "EndDevice", "list"], {
+        homeDir: home,
+        env,
+      });
+      expect(filtered.exitCode).toBe(0);
+      expect(filtered.stdout).toContain("unknown_sensor");
+      expect(filtered.stdout).not.toContain("kitchen_plug");
+
+      const searched = await runCli(["device", "--search", "kitchen", "list"], {
+        homeDir: home,
+        env,
+      });
+      expect(searched.exitCode).toBe(0);
+      expect(searched.stdout).toContain("kitchen_plug");
+      expect(searched.stdout).not.toContain("living_bulb");
+
+      const full = await runCli(["device", "--full", "show", "kitchen_plug"], {
+        homeDir: home,
+        env,
+      });
+      expect(full.exitCode).toBe(0);
+      expect(full.stdout).toContain("0x00158d00018255df");
+    } finally {
+      await mock.close();
+    }
+  });
+
   it("blocks permit-join without confirmation", async () => {
     const mock = await startMockZ2m();
     try {

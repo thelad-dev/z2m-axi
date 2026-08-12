@@ -87,6 +87,30 @@ export function takePositional(args: string[]): string[] {
   return args.filter((a) => !a.startsWith("-"));
 }
 
+/**
+ * Remove and return the first positional argument, skipping values that belong
+ * to known flags (so `cmd --search list` does not treat `list` as a subcommand).
+ */
+export function takeFirstPositional(
+  args: string[],
+  flagsWithValue: string[] = [],
+): string | undefined {
+  const valueFlags = new Set(flagsWithValue);
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]!;
+    if (a.startsWith("-")) {
+      if (!a.includes("=") && valueFlags.has(a)) {
+        const next = args[i + 1];
+        if (next !== undefined && !next.startsWith("-")) i++;
+      }
+      continue;
+    }
+    args.splice(i, 1);
+    return a;
+  }
+  return undefined;
+}
+
 export function stripFlags(args: string[], flagsWithValue: string[], boolFlags: string[]): string[] {
   const rest = [...args];
   for (const f of flagsWithValue) takeFlag(rest, f);
