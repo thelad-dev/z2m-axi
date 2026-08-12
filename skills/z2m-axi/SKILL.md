@@ -34,6 +34,7 @@ npx -y z2m-axi config set --token "$Z2M_TOKEN"
 Env overrides: `Z2M_URL`, `Z2M_TOKEN`, `Z2M_TIMEOUT_MS`.
 Flags: `--url`, `--token`, `--timeout`, `--config`.
 Auth tokens are never printed in full (`config show` masks them).
+Clear a stored token with `config set --clear-token`.
 
 Transport: official Z2M **frontend WebSocket** at `ws(s)://host:port/api` (same protocol
 as the Z2M UI). Not a third-party REST shim.
@@ -62,8 +63,8 @@ commands[6]:
 | `device show <id>` | Device detail; `--full` for untruncated description |
 | `device interview <id> --confirm <id>` | Re-interview (mutation) |
 | `bridge info` | Bridge / network summary |
-| `permit-join on\|off --confirm …` | Open/close join window (mutation) |
-| `config show\|set` | Local connection settings |
+| `permit-join on\|off --confirm …` | Open/close join window (mutation; `--time` default 254; optional `--device`) |
+| `config show\|set` | Local connection settings (`set`: `--url`, `--token`, `--clear-token`, `--timeout`) |
 | `setup hooks` | SessionStart hooks |
 
 Run `npx -y z2m-axi --help` or `npx -y z2m-axi <command> --help` for flags.

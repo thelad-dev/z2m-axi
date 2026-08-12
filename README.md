@@ -39,9 +39,11 @@ z2m-axi config set --token "$Z2M_TOKEN"
 | Environment | `Z2M_URL` | `Z2M_TOKEN` | `Z2M_TIMEOUT_MS` |
 | Flags | `--url` | `--token` | `--timeout` |
 
+Alternate config path: `--config <path>` (or leave the default `~/.config/z2m-axi/config.json`).
+
 Priority: flag > env > config file > default.
 
-**Secrets:** `config show` masks tokens. Tokens are never written to stdout in full. Do not commit config files that contain `authToken`.
+**Secrets:** `config show` masks tokens. Tokens are never written to stdout in full. Do not commit config files that contain `authToken`. Clear a stored token with `z2m-axi config set --clear-token`.
 
 ### Auth (Zigbee2MQTT)
 
@@ -117,8 +119,8 @@ z2m-axi device interview kitchen_plug --confirm kitchen_plug
 | `device show <id>` | Device detail (`--full`) |
 | `device interview <id>` | Re-interview (mutation) |
 | `bridge info` | Bridge / network info |
-| `permit-join on\|off` | Permit join window (mutation) |
-| `config show\|set` | Local connection config |
+| `permit-join on\|off` | Permit join window (mutation; `--time` 1–254, default 254; optional `--device <id>`) |
+| `config show\|set` | Local connection config (`set`: `--url`, `--token`, `--clear-token`, `--timeout`) |
 | `setup hooks` | Install agent SessionStart hooks |
 | `update` | Self-update (via axi-sdk-js) |
 
