@@ -1,0 +1,61 @@
+{
+  "name": "z2m-axi",
+  "version": "0.1.0",
+  "description": "AXI CLI for Zigbee2MQTT — token-efficient TOON output over the official frontend WebSocket API.",
+  "keywords": [
+    "axi",
+    "agent",
+    "cli",
+    "zigbee2mqtt",
+    "z2m",
+    "zigbee",
+    "toon",
+    "mqtt"
+  ],
+  "license": "MIT",
+  "author": "thelad-dev",
+  "homepage": "https://github.com/thelad-dev/z2m-axi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thelad-dev/z2m-axi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thelad-dev/z2m-axi/issues"
+  },
+  "type": "module",
+  "bin": {
+    "z2m-axi": "dist/bin/z2m-axi.js"
+  },
+  "files": [
+    "dist",
+    "skills/z2m-axi",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && npm run build:skill",
+    "build:skill": "tsx scripts/build-skill.ts",
+    "dev": "tsx src/bin/z2m-axi.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0",
+    "axi-sdk-js": "^0.1.10"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "ws": "^8.18.0",
+    "@types/ws": "^8.5.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}
