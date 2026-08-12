@@ -6,6 +6,7 @@ import { deviceCommand } from "./commands/device.js";
 import { homeCommand } from "./commands/home.js";
 import { permitJoinCommand } from "./commands/permit-join.js";
 import { setupCommand } from "./commands/setup.js";
+import { takeFirstPositional } from "./args.js";
 import type { Z2mClientOptions } from "./client.js";
 import { parseGlobalFlags, type CliContext } from "./context.js";
 import {
@@ -110,7 +111,15 @@ export async function main(options: MainOptions = {}): Promise<void> {
       "permit-join": withContext(permitJoinCommand, options),
       config: (args) => {
         // `config set` owns --url/--token/--timeout; do not strip them as connection globals.
-        const isSet = args[0] === "set";
+        // Detect first true positional so flags before `set` still reach configSet.
+        const peek = [...args];
+        const sub = takeFirstPositional(peek, [
+          "--url",
+          "--token",
+          "--timeout",
+          "--config",
+        ]);
+        const isSet = sub === "set";
         return withContext(configCommand, options, {
           consumeConnectionFlags: !isSet,
         })(args);

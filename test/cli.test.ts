@@ -219,6 +219,31 @@ describe("cli integration", () => {
     expect(show.stdout).toMatch(/auth_token:/);
   });
 
+  it("config set keeps connection flags placed before the subcommand", async () => {
+    const home = tempHome();
+    const set = await runCli(
+      [
+        "config",
+        "--token",
+        "pre-sub-token-value",
+        "set",
+        "--url",
+        "http://example:8080",
+      ],
+      { homeDir: home, env: {} },
+    );
+    expect(set.exitCode).toBe(0);
+    expect(set.stdout).toContain("http://example:8080");
+    expect(set.stdout).not.toContain("pre-sub-token-value");
+
+    const show = await runCli(["config", "show"], { homeDir: home, env: {} });
+    expect(show.exitCode).toBe(0);
+    expect(show.stdout).toContain("http://example:8080");
+    expect(show.stdout).toMatch(/auth_token:/);
+    expect(show.stdout).not.toContain("(not set)");
+    expect(show.stdout).not.toContain("pre-sub-token-value");
+  });
+
   it("rejects unknown flags", async () => {
     const { stdout, exitCode } = await runCli(["device", "list", "--nope"], {
       homeDir: tempHome(),

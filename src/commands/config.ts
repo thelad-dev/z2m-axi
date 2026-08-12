@@ -3,6 +3,7 @@ import {
   assertNoUnknownFlags,
   parseNonNegativeIntegerFlag,
   takeBoolFlag,
+  takeFirstPositional,
   takeFlag,
   takePositional,
 } from "../args.js";
@@ -35,22 +36,23 @@ examples:
   z2m-axi config set --clear-token
 `;
 
+const CONFIG_VALUE_FLAGS = ["--url", "--token", "--timeout", "--config"];
+
 export async function configCommand(
   args: string[],
   ctx: CliContext,
 ): Promise<Output> {
+  // Strip only the first true positional subcommand; keep flags on either side.
   const working = [...args];
-  // Don't consume set flags before routing — only peek subcommand.
-  const positionals = takePositional([...working]);
-  const sub = positionals[0];
+  const sub = takeFirstPositional(working, CONFIG_VALUE_FLAGS);
   if (!sub) {
     throw new AxiError("config subcommand required", "VALIDATION_ERROR", [
       "valid subcommands: show, set",
       "Run `z2m-axi config --help`",
     ]);
   }
-  if (sub === "show") return configShow(args, ctx);
-  if (sub === "set") return configSet(args, ctx);
+  if (sub === "show") return configShow(working, ctx);
+  if (sub === "set") return configSet(working, ctx);
   throw new AxiError(`unknown config subcommand: ${sub}`, "VALIDATION_ERROR", [
     "valid subcommands: show, set",
   ]);
@@ -58,9 +60,6 @@ export async function configCommand(
 
 function configShow(args: string[], ctx: CliContext): Output {
   const working = [...args];
-  // drop subcommand
-  const idx = working.indexOf("show");
-  if (idx >= 0) working.splice(idx, 1);
   takeFlag(working, "--url");
   takeFlag(working, "--token");
   takeFlag(working, "--timeout");
@@ -89,15 +88,12 @@ function configShow(args: string[], ctx: CliContext): Output {
 
 function configSet(args: string[], ctx: CliContext): Output {
   const working = [...args];
-  const idx = working.indexOf("set");
-  if (idx >= 0) working.splice(idx, 1);
 
   const url = takeFlag(working, "--url");
   const token = takeFlag(working, "--token");
   const clearToken = takeBoolFlag(working, "--clear-token");
   const timeoutRaw = takeFlag(working, "--timeout");
   const configPathFlag = takeFlag(working, "--config");
-  takeFlag(working, "--url"); // already taken
   assertNoUnknownFlags(working, [
     "--url",
     "--token",
